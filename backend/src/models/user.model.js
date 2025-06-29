@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
         unique : true ,
         required : true
     },
-    fullname : {
+    fullName : {
         type : String,
         required : true
     },
@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
         required : true,
         minlength : 6
     },
-    profilepic  : {
+    profilePic  : {
         type  : String ,//cloudinary url
         default : ""
     }

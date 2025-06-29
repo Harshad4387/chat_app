@@ -1,8 +1,7 @@
 const User = require("../models/user.model");
 const message = require("../models/messages.model.js");
 const cloudinary = require("../utils/cloudinary.js");
-
-
+const { io, getReceiverSocketId } = require("../utils/socket.js");
 const getusersforsidebar = async (req,res)=>{
     try {
         const myid  = req.user._id;
@@ -20,8 +19,8 @@ const getmessages = async (req,res)=>{
         const {id : friendid} = req.params;
         const myid = req.user._id;
         const messages = await message.find({
-            $or : [{senderid : myid , recevierid : friendid },
-                {senderid :  friendid, recevierid : myid}]
+            $or : [{senderId : myid , receiverId : friendid },
+                {senderId :  friendid, receiverId : myid}]
         });
 
         res.status(200).json(messages);
@@ -43,16 +42,21 @@ const sendmessages = async (req,res)=>{
             imageurl = uploadedimage.secure_url;
 
         }
-        const newmesage = new message({
-            senderid :  myid,
-            recevierid : recevierid,
+        const newMessage = new message({
+            senderId :  myid,
+            receiverId : recevierid,
             text ,
             image : imageurl,
         })
 
-        await newmesage.save();
+        await newMessage.save();
 
-        res.status(201).json(newmesage);
+        const receiverSocketId = getReceiverSocketId(recevierid);
+       if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", newMessage);
+    }
+
+        res.status(201).json(newMessage);
         
     } catch (error) {
         console.log("error in send message controller",error.message);

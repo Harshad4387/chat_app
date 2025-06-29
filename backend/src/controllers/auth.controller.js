@@ -5,8 +5,8 @@ const cloudinary = require("../utils/cloudinary.js");
 
 const signup = async(req,res)=>{
    try {
-     const {fullname,email,password} = req.body;
-     if(!fullname || !email || !password){
+     const {fullName,email,password} = req.body;
+     if(!fullName || !email || !password){
         return res.status(400).json({message : "allfields are mandaotary"});
      }
      if(password.length < 6){
@@ -21,18 +21,18 @@ const signup = async(req,res)=>{
      const hashpassword = await bcrypt.hash(password,salt);
  
      const newuser = await User({
-         fullname : fullname,
+         fullName : fullName,
          email : email ,
          password : hashpassword
      })
  
      if(newuser){
         
-        generatejwt(newuser._id, res);
+       await  generatejwt(newuser._id, res);
         await newuser.save();
          res.status(201).json({
             id  : newuser._id,
-            fullname : newuser.fullname,
+            fullName : newuser.fullName,
             email : newuser.email,
             profilepic : newuser.profilepic
          })
@@ -63,9 +63,9 @@ const login = async(req,res)=>{
             return res.status(400).json({message : "Invalid credantils"});
         }
        
-            generatejwt(user._id,res);
+           await generatejwt(user._id,res);
             return res.status(200).json({
-                fullname  : user.fullname,
+                fullName  : user.fullName,
                 id : user._id,
                 email : user.email,
                 profilepic : user.profilepic
@@ -81,7 +81,8 @@ const logout = async(req,res)=>{
 try {   
     const options = {
         httpOnly : true,
-        secure : true
+        secure : true,
+        // expires: new Date(0)
     };
         res.cookie("jwt","",options);
         res.status(200).json({message : "logged out succesfully"});
@@ -94,14 +95,15 @@ try {
 }
 const updateprofile = async (req,res)=>{
     try {
-        const {profilepic}  = req.body;
+        const {profilePic}  = req.body;
         const userid  = req.user._id;
-        if(!profilepic){
+        if(!profilePic){
             return res.status(400).json({message : "profile pic is required"});
         }
 
-        const uploadedimage = await cloudinary.uploader.upload(profilepic);
-        const updateeduser = await User.findByIdAndUpdate(userid , {profilepic : uploadedimage.secure_url} ,{new : true});
+        const uploadedimage = await cloudinary.uploader.upload(profilePic);
+        const updateeduser = await User.findByIdAndUpdate(userid , {profilePic : uploadedimage.secure_url} ,{new : true});
+        console.log(uploadedimage.secure_url);
         res.status(200).json(updateeduser);
        
         
